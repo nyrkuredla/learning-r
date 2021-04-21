@@ -110,7 +110,7 @@ df_auto_data %>% ggplot (
   geom_jitter( alpha = 0.2 ) + 
   geom_smooth( method = lm, se = FALSE ) # ooh
 
-# facet by number of doors and drive wheels
+# facet by number of doors
 # uhmmmm
 ? facet_wrap
 
@@ -120,20 +120,20 @@ df_auto_data %>% ggplot (
   geom_smooth( method = lm, se = FALSE) + 
   facet_wrap( ~ num_of_doors)
 
-# now for two variables, aw jeez
+# now for two variables, aw jeez. add drive wheels
 ? facet_grid
 
 df_auto_data %>% ggplot (
   aes ( x = engine_size, y = highway_mpg, color = num_of_cylinders)) +
   geom_jitter( alpha = 0.2) +
   geom_smooth( method = lm, se = FALSE) + 
-  facet_grid( num_of_cylinders ~ num_of_doors )
+  facet_grid( drive_wheels ~ num_of_doors )
 # nice
 
-# filter out outliers - i.e. ? doors, 3 and 12 cylinders
-df_auto_data %>% filter (num_of_doors != "?" & (num_of_cylinders != "twelve" & num_of_cylinders != "three")) %>%
+# filter out outliers - i.e. ? doors
+df_auto_data %>% filter (num_of_doors != "?") %>%
   ggplot (
     aes ( x = engine_size, y = highway_mpg, color = num_of_cylinders)) +
   geom_jitter( alpha = 0.2) +
   geom_smooth( method = lm, se = FALSE) +
-  facet_grid( num_of_cylinders ~ num_of_doors )
+  facet_grid( drive_wheels ~ num_of_doors )
