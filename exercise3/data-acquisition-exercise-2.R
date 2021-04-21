@@ -47,5 +47,5 @@ df_mtcarsxls <- read_excel( "datasets.xls", sheet = "mtcars" )
 
 glimpse( df_mtcarsxls )
 
-#
+
 
