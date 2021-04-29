@@ -8,6 +8,7 @@ str / summary
 
 ## Connections
 dbConnect
+dbDisconnect
 dbListTables
 dbListFields
 dbGetQuery
@@ -29,6 +30,17 @@ read_xsv
 write_csv
 write_xsv
 excel_sheets
+nrow
+distinct
+inner_join
+left_join
+right_join
+full_join
+semi_join
+anti_join
+rename
+select
+filter
 
 ## Data Wrangling
 mutate
