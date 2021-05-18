@@ -19,3 +19,49 @@ outlier_numbers <- c (9, 10, 11, 12, 1000)
 # also grabbing a sample data frame with some mpg data
 df <- mpg %>% select (cyl, displ, hwy)
 df %>% glimpse ()
+
+# working with the mean
+# ? mean
+
+mean (three_numbers) # 2
+mean (four_numbers) # 25
+mean (five_numbers) # 8.2
+mean (na_numbers) # NA - so note that just one NA value in a set will make the mean return NA
+mean (outlier_numbers) # 208.4
+
+df$cyl %>% mean () # 5.888889
+df$displ %>% mean () # 3.471795
+df$hwy %>% mean () # 23.44017
+
+# how to handle NA values? there's an argument for that
+na_numbers %>% mean (na.rm = TRUE) # removes NA values and returns the mean of the remainder
+
+# outliers can be an issue with mean - skewing the "center"
+# trimming can assist by removing the "outermost" - highest and lowest - values so only the "center" is used to determine the mean
+outlier_numbers %>% mean (trim = 0.1) # 10% trim - returns 208.4
+outlier_numbers %>% mean (trim = 0.3) # 30% trim - returns 11
+# so just removing 10% of the values didn't affect the mean - we need to ensure we're removing enough to actually impact the sample set
+
+# median
+median (three_numbers) #2
+median (four_numbers) #25
+median (five_numbers) # 8
+median (na_numbers, na.rm = TRUE) # 8 
+median (outlier_numbers) # 11
+
+median (df$cyl) # 6
+median (df$displ) # 3.3
+median (df$hwy) # 24
+# note that for the mpg columns, mean and median are similar but not exactly the same
+
+# median holds up against outliers since there is no potential for "skewing" - just finding the center regardless of value
+# testing this - replace the last value of the outlier_numbers vector with something else
+outlier_numbers [5] <- 3^20
+print (outlier_numbers)
+outlier_numbers %>% median () # still 11 - larger number has no bearing on median
+# but mean on the other hand:
+outlier_numbers %>% mean () # 697356889, holy cow. big diff
+
+# mode, aka mfv (most frequent value)
+mfv (df$cyl)
+

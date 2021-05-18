@@ -1,6 +1,5 @@
 
 # Load libraries
-# Do not load any additional libraries other than what is provided in this template
 library(lubridate)
 library(tidyverse)
 
