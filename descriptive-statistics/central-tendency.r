@@ -62,6 +62,22 @@ outlier_numbers %>% median () # still 11 - larger number has no bearing on media
 # but mean on the other hand:
 outlier_numbers %>% mean () # 697356889, holy cow. big diff
 
-# mode, aka mfv (most frequent value)
-mfv (df$cyl)
+# mode, aka mlv (most likely value)
+mlv <- modeest::mlv()
+mlv(df$cyl)
+mlv (four_numbers)
+mlv (na_numbers, na.rm = TRUE)
 
+# quantile - sample quantiles corresponding to probability
+quantile (df$displ) # defaults to quartiles
+
+# summary - gives all these values in a handy block
+df$displ %>% summary ()
+# can also do the whole df
+df %>% summary ()
+
+# rank - sample ranks of values in a *vector* (so need to break out columns from a data frame)
+df$hwy %>% rank () %>% head ()
+df$cyl %>% rank () %>% head ()
+# note that when lots of values are repeated, the rank can skip a lot of numbers to accommodate
+# other functions available with different "flavors" of rank
