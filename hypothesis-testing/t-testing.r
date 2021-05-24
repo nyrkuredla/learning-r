@@ -99,3 +99,100 @@ t.test ( df_old_town$SalePrice, df_somerst$SalePrice, conf.level = 0.95, alterna
 # t is now negative
 # p-value has changed to 1 - we fail to reject the null hypothesis
 # confidence interval has changed from infinity to -114,182; this range contains 0 so is not a significant result
+
+## Third: T-Test with Factors
+# let's use Central Air as a third factor this time
+
+# t.test wants only two factor levels - a column with two factor levels will work
+
+# make a new dataframe inc. central air
+df_ames_housing <- "AmesHousing.csv" %>% 
+  read_csv () %>%
+  mutate_if (is.character, as.factor) %>%
+  select (Neighborhood, 'Central Air', SalePrice)
+
+# glimpse(df_ames_housing)
+# now create a new df with just Old Town and Somerst neighborhoods
+
+df_neighborhoods <- df_ames_housing %>%
+  filter (Neighborhood %in% c ("Somerst", "OldTown"))
+
+summary (df_neighborhoods)
+# note that the summary still includes zero values for the neighborhoods we didn't choose. not a dealbreaker in this case but can drop them if desired using fct_drop()
+
+# let's perform the t.test on SalePrice and Neighborhood
+t.test ( SalePrice ~ Neighborhood, data = df_neighborhoods)
+# recall that only for one-sided tests does the order matter; in this case it does not
+# recall also: t negative, p-value < 0.05, confidence interval does not encompass 0
+# null hypothesis is rejected
+
+# trying another one - does central air drive sale price?
+t.test ( SalePrice ~ `Central Air`, data = df_neighborhoods)
+# negative t, p < 0.05, confidence interval does not encompass 0
+# null hypothesis rejected
+
+# ----- part 4: Data Distribution -----------
+# exploring uniform vs. normal vs. t distributions
+
+# uniform distribution: like trying to simulate random numbers in a range from 1 to 100
+# i.e., equal probability for any and all values across the range
+# contrast with the other distributions we've seen earlier - normal and T indicate that there are some values which are more common than others (mean vs. nearer tail)
+# use runif() to sample from uniform (stands for Random UNIForm, I guess)
+# other [x]unif() functions include dunif (density), punif (probability), qunif (quantile)...
+
+v <- runif (n = 100)
+head (v)
+summary (v)
+# note the values here are pretty darn close to what we'd expect for a uniform distribution of #s from 0 to 1
+# let's change from 0 to 100 instead
+v_unif <- runif(n = 100, min = 1, max = 100)
+head (v_unif)
+summary (v_unif)
+
+# now let's make a data frame out of it so we can plot it
+df_unif <- data_frame (v=v_unif, dist = "Uniform")
+glimpse(df_unif)
+
+# plottin
+df_unif %>%
+  ggplot (aes (x = seq_along (v), y = v)) +
+  geom_point () +
+  labs (title = "100 random points", subtitle = "Distribution: Uniform")
+# yup, pretty scattered
+
+# now compare with normal distribution
+# same basic idea but with r_norm 
+v_norm <- rnorm (n = 100, mean = 50, sd = 10)
+v_norm %>% head()
+v_norm %>% summary()
+
+# plotting and comparing the plot with the uniform distribution will make the difference more clear
+df_norm <- data_frame (v = v_norm, dist = "Normal")
+glimpse (df_norm)
+
+df_norm %>% 
+  ggplot (aes (x = seq_along(v), y = v)) +
+  geom_point () +
+  labs (title = "100 random points", subtitle = "Distribution: Normal")
+# points are clustered more tightly around the middle
+
+# now let's do both in one df so it doesn't auto-adjust each
+df_both <- df_norm %>% bind_rows (df_unif) # combine the data frames
+glimpse (df_both)
+
+df_both %>%
+  ggplot (aes (x = seq_along(v), y = v, color = dist)) +
+  geom_point() +
+  facet_wrap ( ~ dist, scales = "free_x") +
+  labs (title = "100 random points", subtitle = "Distribution: Normal and Uniform")
+# dang
+
+# let's compare using a density plot now
+bw <- 20
+df_both %>% ggplot (aes (x = v, fill = dist)) +
+  geom_density (alpha = 0.8) +
+  theme_dark() 
+# yowza. big ol peak with Normal, gentle hump with Uniform 
+
+
+
