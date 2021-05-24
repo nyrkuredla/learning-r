@@ -11,7 +11,7 @@
 * More focused at this point on exploration rather than confirmation or formal inference
 * Goal of a model is to provide a simple summary of a dataset - capture "signals" and ignore "noise"
 * Predictive models - generate predictions based on sample. As opposed to "data discovery", which looks for interesting relationships within dataset
-** Also known as supervised vs. unsupervised, cause _that_ makes sense, sure
+** Also known as supervised vs. unsupervised
 
 ## Hypothesis generation vs. hypothesis confirmation
 * Modelling for _inference_ - validating whether a hypothesis is true - can be hard. Two crucial principles for doing this right:
@@ -32,4 +32,8 @@
 ** In other words, all models are approximations and therefore will never be exactly true to a dataset. We just hope for a model that is useful in some way.
 
 ## Trying it out
-I'll do this in a separate R worksheet, model-basics.r .
+I'll do exercises in a separate R worksheet, starting with the first assigned lab - _L08-E1-Linear Regression-RyanKelley_.
+
+## Other notes I'm finding useful so far:
+I'll flesh this out later, but in my reading/research for future reference:
+* https://statisticsbyjim.com/regression/overfitting-regression-models/#:~:text=Overfitting%20a%20model%20is%20a,than%20the%20relationships%20between%20variables.&text=In%20regression%20analysis%2C%20overfitting%20can,coefficients%2C%20and%20p%2Dvalues - Overfitting
