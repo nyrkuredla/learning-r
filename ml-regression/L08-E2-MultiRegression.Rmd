@@ -1,0 +1,353 @@
+---
+title: "L08-E1-Multi Regression"
+output: html_notebook
+---
+
+## Exercise Instructions
+
+* Complete all cells as instructed, replacing any ??? with the appropriate code
+
+* Execute RStudio **Session** > **Restart & Run All Chunks** and ensure that all code blocks run without error
+
+## Multivariate Regression Models
+
+The model we created and evaluated in the prior exercise, was univariate or a **single regression model**. There is only one predictor or feature in a single regression model. However, most real-world regression problems have multiple features which can be used to train the model and  predict the label. We call these models **multivariate regression models** or **multiple regression models**. 
+
+The extension from single regression to multiple regression is conceptually simple. As we add more features we add more model coefficients, one for each new feature. All of the model coefficients are estimated using **the method of least squared errors**. This is the same approach we used for our single regression model. 
+
+The R formula language is easily extended to multiple regression problems. For example, if we wish to predict a feature, `dv`, using two features, `var1` and `var2`, the model formula will be:
+
+$$dv \sim var1 + var2$$
+
+
+```{r}
+# Load libraries
+library(tidyverse)
+```
+
+### Multiple regression example. 
+
+Let's try an example of predicting the price of cars using an auto price data set. The data set contains the price of about 200 cars along with 25 attributes of each car.   
+
+***
+**Note:** This data set is from the [University of California Irving Machine Learning Repository](https://archive.ics.uci.edu/ml/datasets/Automobile)  The data was compiled by Jeffrey C. Schlimmer from the following sources:
+
+- 1985 Model Import Car and Truck Specifications, 1985 Ward's Automotive Yearbook. 
+- Personal Auto Manuals, Insurance Services Office, 160 Water Street, New York, NY 10038 
+- Insurance Collision Report, Insurance Institute for Highway Safety, Watergate 600, Washington, DC 20037 
+***
+
+As a first step we let's read the data from the raw `.csv` file. The function below reads and prepares the data for exploration and analysis. Some data munging is required to prepare these data including:
+
+1. The `.csv` file is read, with attention to the possible coding used for missing values in the raw file. Notice that several possible codings for missing values are enabled. 
+2. Replace the `-` character in the column names with `.`. The `-` character in a column name causes problems with R naming conventions.
+3. Remove two unneeded columns and cases with missing data from the data frame using a dpyr verb pipeline. These verbs are chained by the %>% operator.
+
+
+
+```{r}
+# Create a function to read in the data
+read.auto = function(file = "auto_price.csv"){
+  
+    ## Read the raw csv file
+  # Hint: read_csv
+    auto.price <- read_csv (file, col_names = TRUE, na = c('?', '', NA))
+    
+    # remove the '-' character from the column names
+    # Hint: names(), str_replace_all()
+    names(auto.price) <- auto.price %>% 
+      names() %>%  
+      str_replace_all('-', '.')
+    
+    # Remove unwanted columns: symboling, normalized.losses
+    # Remove the rows that have missing values
+    # Hint: select(), complete.cases()
+    auto.price <- auto.price %>% 
+                 select (-symboling, -normalized.losses)  %>%
+                 filter( complete.cases (.))
+    auto.price %>% head(5)
+    # Convert character columns to factors
+    # Hint: mutate_if(), is.character(), as.factor()
+    auto.price <- auto.price %>% 
+      mutate_if ( is.character, as.factor )
+    
+    # Return the data frame
+    # Hint: return()
+    auto.price %>% return ()
+}
+
+# Call the read.auto() function and
+# Store the results on auto.price
+auto.price <- read.auto ()
+
+# Explore the result
+auto.price %>% glimpse()
+```
+
+Examine the column names and data types printed above. Along with the label, `price`, there are a number of features. Some of these features appear useful, whereas, other do not.
+
+### Exploring the data set
+
+In this lesson we will not dive deeply into the exploratory analysis of these data. We will only examine aspects of the features we need to create a multiple regression model.
+
+Our first exploration is to look at the distribution of the label and some of the numeric features. The code in the cell below plots the histogram and density estimate for each feature specified. 
+
+***
+**Code notes:** The use of ggplot2 here is fairly straight forward. The plot object is saved to the variable `p1`, and then printed explicitly. This allows the plots to still be displayed with `walk`. The `walk` function iterates over this list, and calls `plot.hists` with each column name as the first argument. 
+***
+
+```{r}
+# Create a function plot.hist to plot
+# a histogram and a density plot
+# Hint: geom_histogram(), geom_density()
+plot.hists <- function(col, df, bins = 20){
+  p1 <- ggplot(df, aes_string(col)) + 
+    geom_histogram (aes(y = ..density..), bins = bins, 
+                   alpha = 0.3, color = 'blue') +
+    geom_density (size = 1) +
+    labs(title=str_c("Histogram and density function \n for ", col), 
+         x=str_c("value of ", col))
+  
+  # Print the plot
+  p1 %>% print() 
+}
+
+# Create a list of columns of interest
+# Hint: c()
+cols <- c ('price', 'curb.weight', 'engine.size', 'city.mpg')
+
+# Loop through each column and call the plot function
+# Hint: walk()
+cols %>% walk (plot.hists, auto.price)
+```
+
+Examine these density plots. Note that the density of curb weight and city mpg are reasonably symmetric, if not exactly Normally distributed. On the other hand, price (the label) and engine size are strongly skewed to the left. 
+
+### Preparing and transforming data
+
+It is common practice to try various **transformations** of variables to find better distributional properties. Examples of these transformations include logarithms, square roots, squares, exponentiation, and other power transformations. 
+
+In this case, we will preform a log transformation on the price and engine size. We will also try a square root transformation of engine price. These transformations are performed by the code in the cell below. Execute this code to compute the transformations and visualize the results.
+
+```{r}
+# Add log and square root columns in the form of column_name.log and column_name.sqrt
+# for the following: engine.size, city.mpg
+# Update the existing data frame with the 4 new columns
+auto.price <- auto.price %>% 
+  mutate (price.log =  log (price), 
+         engine.size.log = log(engine.size), 
+         engine.size.sqr = sqrt (engine.size), 
+         city.mpg.sqr = sqrt(city.mpg))
+
+# Create a list of columns of interest
+cols = c('price.log', 'engine.size.log', 'engine.size.sqr')
+
+# Loop through each column and call the plot function
+# Hint: walk()
+cols %>% walk (plot.hists, auto.price)
+```
+
+Examine these results. None of these distributions are ideal, but notice the following:
+1.	The log transformation of the price has resulted in a more symmetric distribution. 
+2.	The log transformation of engine size appears more symmetric than the square root transformation or the raw variable.
+
+Next, let's briefly explore the relationship between some of these numeric features and the label, price. The code in the cell below creates plots for each of the features in the list vs. the log of price. Execute this code and examine the results.
+
+***
+**Programming note:** The code in the cell below is similar to the code you used to create the histograms. Compare this code with that used for the histograms, noticing the common recipe used for both. 
+***
+
+```{r}
+# Create a plotting function for points and a trend line
+# Set y to price.log
+# Hint: geom_point(), geom_smooth()
+plot.feature = function(col, df){
+  p1 = ggplot(df, aes_string(x = col, y = 'price.log')) + 
+    geom_point () + 
+    geom_smooth(size = 1, color = 'red', method="loess") + 
+    labs(title=str_c("Relationship between ", col, " and log price"),
+         x=col, y="Price")
+  
+  # Print the plot
+  p1 %>% print()
+}
+
+# Create a list of columns of interest
+cols = c('curb.weight', 'engine.size', 'engine.size.log', 'city.mpg')
+
+# Loop through each column and call the plot function
+# Hint: walk()
+cols %>% walk (plot.feature, auto.price)
+```
+When examining these plots we are looking for a reasonably straight line relationship between the feature and the label, log price. Notice the following:
+1. The relationship between log price and curb weight appears to be on a relatively straight line.
+2. The relationship between log price and log of engine size appears to be closer to a straight line than the relationship with engine size.
+3. The relationship between log price and city mpg is along a fairly straight line, but with some outliers which bends the curve at the high values of city mpg.
+
+### Data normalization
+
+Our next step is to **normalize** these numeric features. **Normalization is essential** whenever you are building a machine learning model with numeric features. If numeric features are not normalized the features with the largest numeric values can dominate the training of the model. In other words, the importance of features should not depend on the range of numeric values. Normalization addresses this problem. 
+
+In this case we will use a method known as **Zscore normalization**. Zscore normalization standardizes a feature so that it has **0 mean** and **unit (1.0) variance**. This process can be written for a feature vector, $x$, as:
+
+$$x_{Zscore} = \frac{x - mean(x)}{sd(x)}\\
+for\ a\ vector\ x$$
+
+The code in the cell below Zscore normalizes the numeric features of interest. A square root transformation is also performed on the city mpg as well. Execute this code.
+
+***
+**Programming note:** The code below applies the dplyr `mutate` verb twice. Once to compute the square root of city mpg. And, once to apply the normalization function. These operators are chained by the `%>%` operator. It is necessary to chain these operators, since the `city.mpg.sqr` column must be added to the data frame before it can be normalized. 
+***
+
+```{r}
+# Create an normalize function that centers to 0 and scales to standard deviations
+normalize <- function(x) (x - mean(x))/sd(x)
+
+# Calculate columns
+# using the normalize function defined above
+auto.price <- auto.price %>% 
+  mutate(curb.weight = normalize (curb.weight), 
+         engine.size = normalize(engine.size), 
+         engine.size.log = normalize(engine.size.log),
+         city.mpg = normalize(city.mpg),
+         city.mpg.sqr = normalize(city.mpg.sqr))      
+
+# Explore the result
+auto.price %>% 
+  select(curb.weight, engine.size, engine.size.log, city.mpg, city.mpg.sqr) %>% 
+  glimpse() %>% 
+  summary()
+```
+
+Our data set has now been prepared for building a multivariate linear regression model. 
+
+Before we get started building a model, let's have a look at the transformed city mpg feature. Execute the code in the cell below to and examine the results. 
+
+```{r}
+# Plot the histogram of city.mpg.sqr
+# Hint: plot.hists()
+plot.hists ('city.mpg.sqr', auto.price)
+
+# Plot the features of city.mpg.sqr
+# Hint: plot.feature()
+plot.feature ('city.mpg.sqr', auto.price)
+```
+
+Compare these plots to the ones produced earlier. The distribution of the square root of city mpg is a bit more symmetric. The curvature with respect to the log of price is not that noticeably different. 
+
+### Training the model
+
+With the data prepared, we can now create a linear regression model. The code in the cell below computes a linear regression model using 5 numeric features, both raw and computed. Execute this code and examine the printed the summary of the model.
+
+***
+**Note:** We are constructing a **linear model**. However, we have included features with nonlinear transformations. Thus, just because we are using a linear model does not mean we are limited to models of straight lines. 
+***
+
+```{r}
+# Create an linear model of 
+# price.log ~ curb.weight + engine.size + engine.size.log + city.mpg  + city.mpg.sqr
+# Hint: lm()
+auto.mod <- lm (price.log ~ curb.weight + engine.size + engine.size.log 
+              + city.mpg  + city.mpg.sqr, data = auto.price)
+
+# View the model summary
+# Hint: summary()
+auto.mod %>% summary ()
+
+# Print the confidence interval of the model coefficients
+# Hint: confint()
+cat('The coefficient confidence intervals')
+auto.mod %>% confint ()
+```
+Notice the following about these results:
+1. The model appears to be **over-fit**, as the engine.size coefficient does not appear to be significant. 
+2. The residual standard error is reasonably small, given the range of label the log label values.
+3. The adjusted R-squared is reasonable.
+4. The model is significant. 
+
+### Evaluating model performance
+
+Let's have a first look at the results of the model. The code in the cell below does the following using a dplyr operator chain:
+- A first dplyr `mutate` operator computes the score using the `predict` method for the model.
+- A second `mutate` operator in the chain computes the residuals and the predicted value on the non-log scale.
+- The first 10 rows of the last 8 columns of the data frame are printed. 
+
+Execute this code and compare the label values to the predicted values, along with the (log) residual values.
+
+```{r}
+# Add the predicted score to the dataframe
+# along with the log of the residual values
+# Hint: predict()
+auto.price <- auto.price %>% 
+  mutate(score = predict (auto.mod, data = auto.price),
+         resids = price.log - score,
+         predicted.price = exp(score)) 
+
+# Display the first few rows of the 
+# last columns in the data frame from price to predicted.price
+# Hint: select() with the : operator, head()
+auto.price %>% select (price:predicted.price) %>% head()
+```
+Notice that for most cases the label (log label) values are close to the predicted (log predicted or score), and the residuals are small. In a few cases there are larger discrepancies and residuals. 
+
+The code in the cell below plots the (log) residuals. Execute this coded and examine the results.
+
+```{r}
+# Create an residuals plotting function
+# Hint: geom_histogram(), geom_density()
+plot.resids <- function(df){
+  # Plot both a histogram and a density plot
+  p1 <- df %>% 
+    ggplot(aes(resids, ..density..)) + 
+    geom_histogram (bins = 10, alpha = 0.3, color = 'blue') +
+    geom_density (size = 1) +
+    labs(title="Histogram and density function \n for residuals", x="Residual value")
+  
+  # Plot a qq plot
+  # Hint: geom_qq()
+  p2 <- df %>% 
+    ggplot(aes(sample = resids)) + 
+    geom_qq () + 
+    labs(title="Quantile-quantile Normal plot \n of residuals")
+  
+  # Print the plots
+  p1 %>% print()
+  p2 %>% print()
+}
+
+# Plot the residuals
+auto.price %>% plot.resids ()
+```
+Examine these results. Notice that the residuals have some deviation from the ideal Normal, paticularly at the high end. This means that the price of certain autos are being significantly underestimated. 
+
+The code of in the cell below plots the residuals vs. the fitted values. Execute this code and examine the results.  
+```{r}
+# Create an scatter plot function including trend
+# Hint: geom_point(), geom_smooth()
+scatter.resids <- function(df){
+  # Plot the points and a trend
+  df %>% 
+    ggplot(aes(score, resids)) + 
+    geom_point (size = 2) +
+    geom_smooth (size = 1, color = 'red', method="loess") +
+    labs(title="Residuals vs fitted values", x="Fitted values", y="Residuals")
+}
+
+# Plot the residuals
+auto.price %>% scatter.resids ()
+```
+These residuals are appear fairly constant with the changes in (log) fitted values. The large positive residuals are visible in the middle of the range of fitted values. It appears that the predicted values of some higher priced cars are not being correctly predicted. 
+
+Overall, these results are not too bad, despite the over-fit model.
+
+***
+# <font color="blue">Your turn:</font>  
+
+We have established that the initial multiple regression model is over-fit. One or more features must to be pruned from the model. Typically, this is done by removing the features in order starting with the least significant, one at a time. For this exercise, prune the features until all of the remaining features are significant. 
+
+## Summary
+
+In this lesson you have:
+- Evaluated the multiple regression model, to determine if the model is over-fit.
+- Explored and transformed the auto pricing data to prepare it for model building.
+- Explored and evaluated a multiple regression model for auto price. 

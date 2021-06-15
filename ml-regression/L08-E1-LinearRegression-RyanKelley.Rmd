@@ -1,0 +1,430 @@
+---
+title: "L08-E1-Linear Regression"
+output: html_notebook
+---
+
+## Exercise Instructions
+
+* Complete all cells as instructed, replacing any ??? with the appropriate code
+
+* Execute RStudio **Session** > **Restart & Run All Chunks** and ensure that all code blocks run without error
+
+# Introduction to Regression
+
+## Overview
+
+This lesson introduces you to the basic principles of **regression models**. Regression models are **supervised machine learning** algorithms, which have the following properties:
+- Are used to **predict a numerical value** or **score**. 
+- Map a set of **features** (**predictor** or **independent variable**) values to **predict** a **label** (**dependent variable**). 
+- Is a **supervised learning model**, meaning that the model is trained using **marked cases** with a known **label value**. 
+- Regression models minimize the error between the predicted **score** and the known **label**. 
+- Regression models can be **linear** or **nonlinear**. 
+
+Once you complete this lesson, you will be able to apply linear regression models to predict numeric values. Specifically, in this lesson you will explore the following topics:
+
+- **Linear single regression** models, with one feature used to predict a label value.
+- **Performance metrics and fit evaluation methods** used to evaluate regression models. - how good is the fit?
+- **Determine if a model is overfit** and how to prune features to reduce overfit. - overfit = ML model won't generalize well with new cases/new data in production.
+- **Transform features** to make them suitable for linear models. "data munging"
+- **Linear multiple regression** models, which use multiple features to predict the label value.
+
+## Basics of Linear Regression
+
+Let's have a look at the simplest case of a regression model for a straight line. Let's say that we are measuring two variables.  For example, the first variable could be past customer spending and the other variable is the amount the customer spends in response to a coupon. We want to find a relationship between these variables so that we can predict the value of the second variable given a value of the first variable. In technical terms we want to **model** offer response based on a **predictor variable** of past spending.   
+
+Let's call the first variable $x$ or the **feature**. The features are the variables we use as the inputs to our predictive model. We will call the second variable $y$, or the **label**. The label is the variable we wish to **predict**. 
+
+The simplest linear regression model determines the equation of a straight line. We can write the **equation of a straight line** as follows:
+
+$$Y = m X + b\\
+where\\
+slope = m = \frac{rise}{run}\\
+and\\
+y = b\ at\ x = 0\\
+or\\
+b = the\ intercecpt$$
+
+We can illustrate this relationship as:
+
+<center>**A straight line**</center>
+
+
+We have a training data set with paired values, ${x_i,y_i}$. Using these training data we can define a line that best fits these data. If we have a number of values pairs, ${x_i,y_i}$, we can write the equation for the line, including errors as:
+
+$$y_i = mx_i + b + \epsilon_i \\
+where \\
+\epsilon_i = error$$
+
+We call the two parameters $m$ and $b$ the **model coefficients**. 
+
+We can visualize these errors, $\epsilon_i$, as shown in the figure below.
+
+<center>**Example of Least Squares Regression**</center>
+
+The question now is what do we mean by **the best fit** to the data? For most regression models we want to find the model which **minimizes the sum of the squared errors**. The errors are the difference between the **predicted values** or the **scored values**, and the **actual label values**. These errors are also known as **residuals**. This type of regression model is known as the **method of least squares**. 
+
+We want to solve for $m$ and $b$ by minimizing the error, $\epsilon_i$. We can write this out as follows.
+
+$$min\ \Sigma_i \epsilon_i^2 = min\ \Sigma_i{ (y_i - \hat{y_i})^2} = min\ \Sigma\ errors\\
+where\\
+\hat{y_i} = mx_i + b = scored\ value$$
+
+
+```{r}
+# Load libraries
+library(tidyverse)
+```
+
+# rnorm()
+Generates random samples from a normal distribution
+
+```{r}
+# Display help on rnomr
+? rnorm
+```
+
+# Normal {stats}	R Documentation
+The Normal Distribution
+
+## Description
+
+Density, distribution function, quantile function and random generation for the normal distribution with mean equal to mean and standard deviation equal to sd.
+
+## Usage
+
+* dnorm(x, mean = 0, sd = 1, log = FALSE)
+* pnorm(q, mean = 0, sd = 1, lower.tail = TRUE, log.p = FALSE)
+* qnorm(p, mean = 0, sd = 1, lower.tail = TRUE, log.p = FALSE)
+* rnorm(n, mean = 0, sd = 1)
+
+```{r}
+# Simulate a normal distribution 
+# with a mean of 0 
+# and standard deviation of 1
+# and a sample size of 1000
+# Make the random number generation reproducable
+# Hint: set.seed(), rnorm()
+set.seed (1212)
+error <- rnorm (n = 1000, mean = 0, sd = 1)
+
+# convert the results to a data frame
+# Hint: data.frame()
+df_error <- data.frame (results=error)
+
+# Plot the results
+# as a histogram
+df_error %>% 
+  ggplot(aes(x=results)) + 
+  geom_histogram (color="black", fill="gray") +
+  theme_classic() +
+  labs(title="Histogram of a random normal distribution")
+```
+
+```{r}
+# Convert the above code into a function
+# parameters would be n, mean, and sd
+# Convert the result into a data frame with a column named results
+# Return the data frame
+# Name the function sim.rnorm
+# Hint: rnorm(), data.frame(), return()
+sim.rnorm <- function(n, mean, sd) {
+  x <- rnorm (n=n, mean=mean, sd=sd)
+  
+  # Convert result to a data frame
+  df <- data.frame (results=x)
+  
+  # Return the result
+  df %>% return ()
+}
+```
+
+```{r}
+# Call the sim.rnorm function 
+# with a mean of 0 
+# and standard deviation of 1
+# and a sample size of 1000
+# Make the random number generation reproducable
+
+set.seed(1212)
+df_error <- sim.rnorm (n = 1000, mean = 0, sd = 1)
+
+# View the first rows of the result
+# Hint: head()
+df_error %>% head ()
+```
+
+```{r}
+# Plot the results
+# as a histogram
+df_error %>% 
+  ggplot(aes(x = results )) + 
+  geom_histogram (color="black", fill="gray") +
+  theme_classic() +
+  labs(title="Histogram of a random normal distribution")
+```
+
+The results should be identical as the prior code block. The function doesn't save us much effort, but we should get into the habit of wrapping our code into functions. Functions make it easier to keep the code maintainable and hopefully simpler to read as we scale up in complexity.
+
+### A simple example
+
+With this bit of theory behind us, let's look at a simple example. 
+
+The code in the cell below computes some synthetic data. The function in the code performs the following operations:
+
+- A vector of Normally distributed noise with standard deviation, $sd$, is computed.
+- A data frame is created with the uniformly spaced $x$ values and the $y$ values with the error added. Since $x_i = y_i$ the slop of the line is $1.0$.
+- A **seed** for the random number generator is set to ensure this example is reproducible. 
+
+Execute this code and examine the head of the computed data frame. 
+
+```{r}
+# Create a function that includes x and y ranges
+# and adds the random error to y
+# Hint: seq()
+sim.data <- function(x1, y1, x2, y2, n, sd){
+  error <- rnorm(n, mean = 0, sd = sd)
+  data.frame(
+              x = seq (from = x1, to = x2, length.out = n),
+              y = seq (from = y1, to = y2, length.out = n) + error
+            )
+}
+
+# Set the random number seed so that the exercises are reproducible.
+# Hint: set.seed()
+set.seed (1212)  
+
+# Call the function and store the result in 
+# variable reg.data
+reg.data = sim.data (0, 0, 10, 10, 50, 1)
+
+# View the first rows of the result
+# Hint: head()
+reg.data %>% head ()
+```
+
+Next, let's use `ggplot2` to plot the data we just synthesized. The code in the cell below plots the values of the feature, $x$, and the label, $y$. Execute this code and examine the results. 
+
+```{r}
+# Create a plotting function
+# for a scatterplot of x vs. y
+plot.dat <- function(df){
+  df %>% ggplot(aes(x, y)) + 
+    geom_point (size = 2) +
+    labs(title="X vs. Y")
+}
+
+# Call the function with the data frame
+# from the prior cell as the parameter
+plot.dat( reg.data )
+```
+
+Models in R are defined by an equation using the $\sim$ symbol to mean modeled by. In summary, the variable to be modeled is always on the left. The relationship between the variabble to be modeled on the right. This basic scheme can be written as shown here. 
+
+$$dependent\ variable\sim indepenent\ variables\\
+or\\
+label \sim features\\
+$$
+
+In words, we say the symbol **$\sim$** as **is modeled by**. So the entire formula can be stated as **the label is modeled by the features**.
+
+For example, for our data where we wish to model the $y$ variable by the $x$ variable, the R model formula is:
+
+$$y \sim x$$
+
+The R `lm` function computes a linear regression model using the model formula as the first argument. The `lm` function creates an **R model object** for a linear regression model. The model object contains a great deal of information which we will investigate in this lesson. 
+
+Once an R model object is computed, we can compute the **scores** or **predicted values** using the `predict` method. A **method** is a special type of function that uses the **attributes of an object**.
+
+The code in the cell below compute the linear regression model for our synthetic data. This code does the following:  
+
+- Compute the R model object, `mod`, using the formula `y ~ x`.
+- Use the model object to compute scores (predicted values) for the dependent variable `y`. In this case, we just use the data that was originally used to compute the model. In a more general case, you can use other data to make predictions from the model.
+- The head of the data frame is printed.
+
+Execute this code and examine the head of the data frame computed.
+
+```{r}
+# Create a linear model of our data
+# called mod
+# Hint: lm()
+mod = lm (y ~ x, data = reg.data)
+
+# Use the model to predict results of the data
+# Hint: predict()
+reg.data$score <- predict (mod, data = reg.data)
+
+# Display the first few rows of the result
+# Hint: head()
+reg.data %>% head ()
+```
+The data frame shows the $x$ values, along with the true $y$ values, and the predicted values or `score`. You can see that the `score` values are generally close to the $y$ values. 
+
+### Examining regression results
+
+Let's have a look at the predicted values or scores from our model and the data values we used to fit the model. The code in the cell below plots the original data, along with the predicted values shown as a line. Execute the code and examine  the result.
+
+```{r}
+# Create a scatterplot function
+# include a line of the score
+plot.reg <- function(df){
+  df %>% ggplot(aes(x, y)) + 
+    geom_point(size = 2) +
+    geom_smooth (aes(x, score), size = 2, color = 'blue') +
+    labs(title="X vs. Y")
+}
+
+# Call the plot function
+reg.data %>% plot.reg ()
+```
+
+It appears that the model is a fairly good fit to the data we synthesized. We can further investigate the properties of our regression model by looking at the **model coefficients**. 
+
+The various **attributes** of the R model object are stored in an R list. The elements of this list can be accessed with the `$` operator. In this case, we want the model coefficients, which are called `coef` in the model object list. Execute the code in the cell below to print and  examine the model coefficients.  
+
+```{r}
+# Print the model coefficients
+#Hint: $coef
+mod$coef
+```
+You can see the two model coefficients, one for the intercept ($b$ in our notation), and one for the slope, $x$ ($m$ in out notation). Using these coefficients we can predict new values of $\hat{y_i}$ with the formula:
+
+$$\hat{y_i} = 0.0414 + 0.956\ x_i$$
+
+In words, for every new value of $x$ we can predict a new values of $y$. Prediction is the essential purpose of a machine learning model of any kind. 
+
+### Visualizing regression results
+
+In the foregoing section, we have seen that our linear regression model seems to work fairly well qualitatively. However, we need methods to quantitatively evaluate the performance and compare the performance of regression models.
+
+As a first step, let's compute the **residuals** or errors for the model. The code in the cell below adds the residuals to the data frame and prints the head of the data frame. Execute this code and examine the label, $y$, the `score`, and the residuals.   
+
+```{r}
+# Calculate the residuals
+reg.data$resids <- reg.data$y - reg.data$score
+
+# Display the first few rows of the result
+# Hint: head()
+reg.data %>% head()
+```
+You can see that the residuals have a wide range of value, both positive and negative. 
+
+Let's plot the residuals to examine their distribution properties. Ideally, the residuals from a linear regression model should have a **Normal distribution**. 
+
+***
+**Note:** A common misconception is that the variables used for a linear model must have a Normal distribution. While, this condition makes obtaining a good fit easier, it is not a requirement. What is important is that the residuals have a Normal distribution. 
+***
+
+We will make two plots:
+
+- A **histogram** and **density estimation plot**, which show the distribution of the residuals.  
+- A **quantile-quantile Normal plot or qq-plot** which plots the quantiles of a standard Normal distribution on the $x$ axis and the quantiles of the residuals on the $y$ axis. Ideally, the points on the qq-plots should fall along a straight line. If the points fall close to a straight line, this indicates that the residuals are approximately Normal. 
+
+The code in the cell below plots the histogram and density estimation plot along side the qq-Normal plot. Execute this code and examine the distribution properties of the residuals. 
+
+```{r}
+# Create an residuals plotting function
+plot.resids <- function(df){
+  # Plot both a histogram and a density plot
+  p1 <- df %>% 
+    ggplot(aes(resids, ..density..)) + 
+    geom_histogram (bins = 10, alpha = 0.3, color = 'blue') +
+    geom_density (size = 1) +
+    labs(title="Histogram and density function \n for residuals", x="Residual value")
+  
+  # Plot a qq plot
+  p2 <- df %>% 
+    ggplot(aes(sample = resids)) + 
+    geom_qq () + 
+    labs(title="Quantile-quantile Normal plot \n of residuals")
+  
+  # Print the plots
+  p1 %>% print()
+  p2 %>% print()
+}
+
+# Plot the residuals
+reg.data %>% plot.resids ()
+```
+
+The histogram and density plot show that the residuals are approximately Normally distributed, with a few deviations. The points on the qq-Normal plot fall close to a straight line, indicating that the distribution of the residuals are close to Normal. 
+
+An important diagnostic is to check if the residuals are **homoscedastic** with respect to the fitted or scored values. By homoscedastic, we mean that the distribution of the residuals is constant with the fitted values. This condition indicates the regression model is a good fit, since the model error should not depend on the fitted value. 
+
+However, if there is structure in the residuals when plotted against the fitted values, we can infer that there is some kind of problem with the regression model. We call this condition **heteroscedastic** residuals. Heteroscedastic residuals indicate the model is not a good fit. 
+
+The code in the cell below plots the residuals vs. the fitted values for our regression model. A nonlinear regression, known as `loess`, is used to highlight the fit between the residuals and the fitted values. Execute this code and examine the results. 
+
+```{r}
+# Create an scatter plot function
+scatter.resids <- function(df){
+  # Plot the points and a trend
+  df %>% ggplot(aes(score, resids)) + 
+    geom_point(size = 2) +
+    geom_smooth (size = 1, color = 'red') +
+    labs(title="Residuals vs fitted values", x="Fitted values", y="Residuals")
+}
+
+# Plot the residuals
+reg.data %>% scatter.resids ()
+```
+
+Examine the plot you just created. Notice that the residuals have a fairly constant distribution with respect to the fitted values. Also, the `loess` line is close to 0 and nearly straight. These conditions indicate that the residuals are homoscedastic and our model is a good fit. 
+
+***
+**Note:** The proper appearance of a plot of residuals vs. fitting values has been described as a 'fuzzy caterpillar'. The point being that the residuals should look rather random without much variation with respect to the fitted value.
+***
+
+***
+**Note:** In this lesson we have used code developed specifically to plot the properties of our model residuals. The `plot` method for R model objects will create a plot of residuals vs. fitted values and a qq-Normal plot, along with some other useful diagnostic plots. 
+***
+
+### Regression model statistics
+
+We have looked at several possible diagnostic plots for the residuals of our linear model. There are also summary statistics we can look at to evaluate the performance of our model. The `summary` method prints a set of useful summary statistics. We will discuss the output of the `summary` method in the next few paragraphs. 
+
+Additionally, the `confint` method prints the **95% confidence interval** of the 
+
+When interpreting the output of the `summary` method and the confidence intervals, keep in mind that **overfitting** is a major problem with any machine learning model. Most of the output of the `summary` and `confint` methods help you to determine if a model is overfit. 
+
+The content of the `summary` output is as follows:  
+
+- The **call** used to compute the model being evaluate, which includes the model formula and the data frame used.
+- **Quartiles**, minimum and maximum value of the residuals. 
+- Table of **model coefficients**, one for each feature in the model, plus the intercept if included. The figures in this table are used to determine if the coefficients are significant. Models with coefficients which are not significant are overfit. Each coefficient has the following statistics which are used to determine if coefficients are significant:
+  - The **coefficient values** themselves.
+  - The **standard error** of each model coefficient. If the standard error is of the same magnitude (or larger) than the coefficient value, the coefficient is not significant. 
+  - The **t value** and **p-value** for the hypothesis test on the model.
+- The **residual standard error**. This figure should be reasonable given the scale of the label. 
+- The **R squared** and **adjusted R squared**. Adjusted R squared is adjusted for the degrees of freedom of the model and the residuals. You can think of adjusted R squared as a measure of the **reduction in variance** of the original lable value to the residuals from the model. A model which explains none of the variance has $adjusted\ R\ squared = 0$. A model with a perfect fit (*warning, may be over-fit*) has $adjusted\ R\ squared = 1.0$. We can write adjusted R squared as:
+$$R^2_{adj} = 1 - \frac{Var_{residual}}{Var_{initial}}$$
+- Statistics on the significance of the overall model. 
+
+```{r}
+# Print the summary of the model
+summary (mod)
+
+# Print the confidence interval
+# Hint: confint()
+cat('The coefficient confidence intervals')
+confint (mod)
+```
+Examine these results and notice the following:
+
+- The slope coefficient, $x$ is significant with a standard error significantly less that the coefficient value, a large t-value and small p-value. Further, the confidence  intervals do not overlap with 0.0. 
+- However, the intercept coefficient is not significant since the standard error is larger than the coefficient value, t-value is small and p-value large. Further, the confidence interval includes 0.0. 
+- The fit appears reasonable, with an adjusted R squared of about 0.88.
+- Overall the model is significant with a small p-value. 
+
+In summary, while the fit of this model may be reasonable, the model is over-fit. 
+
+***
+
+
+## Summary
+
+In this lesson you have:
+
+- Created a single regression model using synthetic data.
+- Evaluated residuals of the model.
+- Evaluated the single regression model, to determine if the model is over-fit.
+- Explored and transformed the auto pricing data to prepare it for model building.
