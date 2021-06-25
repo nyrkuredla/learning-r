@@ -1,0 +1,46 @@
+---
+title: "data-wrangling-practice"
+author: "Ryan Kelley"
+date: "6/24/2021"
+output: html_document
+---
+
+## Data Wrangling Basics - Zillow Prize dataset
+
+For this exercise in data wrangling, I'll use the Zillow Prize dataset from Kaggle: [Zillow Prize at Kaggle](kaggle.com/c/zillow-prize-1/data). This dataset is provided by Zillow as part of a public competition intended to improve the accuracy of "Zestimates" - estimated home values which are generated using machine learning models and provided for free to consumers. 
+
+For now, I'll just use the dataset to practice importing and data transformation, and move on later to using the freshly transformed data to create some visualizations. 
+
+First, I need to load packages. I'll use the **tidyverse** library to help me along. The **tidyverse** library includes many packages which make data wrangling and visualization much easier.  
+
+```{r library}
+library (tidyverse)
+```
+
+Next, I need to import the raw data from the .csv file that I've downloaded from Kaggle, _properties_2016.csv_. Let's make sure we can see it in our current directory. _getwd()_ will provide the current working directory ("wd"), and then I can use that output to pipe to _dir()_ to see what files are in it.
+
+```{r dir}
+getwd() %>% dir()
+```
+
+There it is! Now I need to pull the raw .csv data into R. I won't assign the input to anything yet - at first I just want to look at what happens when I run the .csv file through _read_csv()_. Sometimes R makes weird assumptions about what data type, etc. the columns should be, so I want to make sure it's not jumping to any odd conclusions.
+
+``` {r read_csv attempt 1}
+read_csv ("./properties_2016.csv") 
+```
+
+I immediately get the warning "12808 parsing failures", with the first 5 rows of failures listed. It looks like the **architecturalstyletypeid** and **typeconstructiontypeid** columns have some issues, in particular: there are some values of *6* and *7*, but R assumed that these columns should be logical type, which only takes 1/0/T/F/TRUE/FALSE as input. Since the columns reference a "type", I assume that the numbers used here are categories. I'll try forcing R to pull these columns in as datatype *factor*, instead, and see if that resolves the issue. (More on this in the [tidyverse docs](https://readr.tidyverse.org/articles/readr.html#column-specification-1).)
+
+```{r read_csv parse attempt}
+# using the .default flag would usually assign a specific data type to ALL columns unless otherwise specified; using "?" will preserve R's default parsing/guessing except where I override it
+read_csv ("./properties_2016.csv", col_types = cols(.default = "?", architecturalstyletypeid = "f", typeconstructiontypeid = "f")) %>% glimpse()
+```
+
+The parsing errors have disappeared, so I'll assign the output to a new dataframe for more cleanup. From there, I'll do some preliminary cleanup and renaming of columns, before going into further tidying/normalization. The first thing I'll do is use the *na* argument in _read.csv()_ to make sure that any blank values are interpreted as NA. 
+
+```{r read_csv to df}
+# assigning to a dataframe and making sure blank values are interpreted as NA
+df_2016props <- read_csv ("./properties_2016.csv", na = c("", " ", "NA"), col_types = cols(.default = "?", architecturalstyletypeid = "f", typeconstructiontypeid = "f"))
+df_2016props %>% glimpse()
+```
+Next, I want to rename some of the columns to make them shorter and easier to read. This is where I'll pick up next time!
