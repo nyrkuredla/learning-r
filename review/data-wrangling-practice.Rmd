@@ -43,4 +43,96 @@ The parsing errors have disappeared, so I'll assign the output to a new datafram
 df_2016props <- read_csv ("./properties_2016.csv", na = c("", " ", "NA"), col_types = cols(.default = "?", architecturalstyletypeid = "f", typeconstructiontypeid = "f"))
 df_2016props %>% glimpse()
 ```
-Next, I want to rename some of the columns to make them shorter and easier to read. This is where I'll pick up next time!
+Next, I want to change some of the data types for, e.g., columns which were imported as doubles which really should be factor (ones that indicate a "type", in other words, as opposed to a numeric value. I'll also do this for variables like unit, bedroom, and bathroom count, since those have more of a categorical vibe as well  (i.e. I'm more likely to be interested in the number of units/rooms as a *type* of house as opposed to treating it as a simply numeric value). 
+
+Then, I'll rename some of the columns to make them easier to read - looking at the Data Dictionary included with this dataset on Kaggle, I think I can create some more descriptive column names than the default. 
+
+After these cleanup steps, I can start doing some initial visualizations to get a sense of the shape of some of this data.
+
+``` {r datatype cleanup}
+# changing some of the default import data types
+df_2016props <- df_2016props %>% 
+  mutate (parcelid = as.factor (parcelid),
+          airconditioningtypeid = as.factor (airconditioningtypeid),
+          bathroomcnt = as.factor (bathroomcnt),
+          bedroomcnt = as.factor (bedroomcnt),
+          buildingclasstypeid = as.factor (buildingclasstypeid),
+          buildingqualitytypeid = as.factor (buildingqualitytypeid),
+          decktypeid = as.factor (decktypeid),
+          fullbathcnt = as.factor (fullbathcnt),
+          garagecarcnt = as.factor (garagecarcnt),
+          heatingorsystemtypeid = as.factor (heatingorsystemtypeid),
+          pooltypeid10 = as.factor (pooltypeid10),
+          pooltypeid7 = as.factor (pooltypeid7),
+          propertylandusetypeid = as.factor (propertylandusetypeid),
+          storytypeid = as.factor (storytypeid),
+          unitcnt = as.factor (unitcnt),
+          numberofstories = as.factor (numberofstories),
+          taxdelinquencyflag = as.logical (taxdelinquencyflag)
+          )
+# drop unneeded columns
+df_2016props <- df_2016props %>% select (!c(
+  parcelid, 
+  calculatedbathnbr, 
+  threequarterbathnbr, 
+  finishedfloor1squarefeet, 
+  finishedsquarefeet13, 
+  finishedsquarefeet50, 
+  fips, 
+  fullbathcnt, 
+  garagetotalsqft, 
+  parcelid, poolsizesum, 
+  propertycountylandusecode, 
+  propertyzoningdesc, 
+  rawcensustractandblock, 
+  censustractandblock, 
+  typeconstructiontypeid, 
+  structuretaxvaluedollarcnt))
+
+# rename remaining cols per data dictionary descriptions
+df_2016props <- 
+  df_2016props %>% rename (
+    AC_type = airconditioningtypeid,
+    architecture_type = architecturalstyletypeid,
+    basement_area = basementsqft,
+    bathrooms = bathroomcnt,
+    bedrooms = bedroomcnt,
+    framing_type = buildingclasstypeid,
+    building_condition = buildingqualitytypeid,
+    deck_type = decktypeid,
+    total_finished_area = calculatedfinishedsquarefeet,
+    finished_living_area = finishedsquarefeet12,
+    unfinished_and_finished_area = finishedsquarefeet6,
+    total_area = finishedsquarefeet15,
+    fireplaces = fireplacecnt,
+    garages = garagecarcnt,
+    has_spa = hashottuborspa,
+    heating_type = heatingorsystemtypeid,
+    lot_area = lotsizesquarefeet,
+    pools = poolcnt,
+    spa_hottub = pooltypeid10,
+    pool_with_spa = pooltypeid2,
+    pool_no_spa = pooltypeid7,
+    county_zoning = propertylandusetypeid,
+    city_id = regionidcity,
+    county_id = regionidcounty,
+    neighborhood_id = regionidneighborhood,
+    zipcode_id = regionidzip,
+    rooms = roomcnt,
+    story_type = storytypeid,
+    units = unitcnt,
+    patio = yardbuildingsqft17,
+    shed = yardbuildingsqft26,
+    year_built = yearbuilt,
+    stories = numberofstories,
+    has_fireplace = fireplaceflag,
+    tax_parcel = taxvaluedollarcnt,
+    tax_year = assessmentyear,
+    tax_land = landtaxvaluedollarcnt,
+    tax_total = taxamount,
+    tax_pastdue = taxdelinquencyflag,
+    tax_pastdue_year = taxdelinquencyyear
+  )
+
+glimpse (df_2016props) # looks better!
+```
