@@ -58,7 +58,6 @@ df_2016props <- df_2016props %>%
           bedroomcnt = as.factor (bedroomcnt),
           buildingclasstypeid = as.factor (buildingclasstypeid),
           buildingqualitytypeid = as.factor (buildingqualitytypeid),
-          decktypeid = as.factor (decktypeid),
           fullbathcnt = as.factor (fullbathcnt),
           garagecarcnt = as.factor (garagecarcnt),
           heatingorsystemtypeid = as.factor (heatingorsystemtypeid),
@@ -74,6 +73,7 @@ df_2016props <- df_2016props %>%
 df_2016props <- df_2016props %>% select (!c(
   parcelid, 
   calculatedbathnbr, 
+  decktypeid,
   threequarterbathnbr, 
   finishedfloor1squarefeet, 
   finishedsquarefeet13, 
@@ -99,7 +99,6 @@ df_2016props <-
     bedrooms = bedroomcnt,
     framing_type = buildingclasstypeid,
     building_condition = buildingqualitytypeid,
-    deck_type = decktypeid,
     total_finished_area = calculatedfinishedsquarefeet,
     finished_living_area = finishedsquarefeet12,
     unfinished_and_finished_area = finishedsquarefeet6,
@@ -134,5 +133,95 @@ df_2016props <-
     tax_pastdue_year = taxdelinquencyyear
   )
 
-glimpse (df_2016props) # looks better!
+# glimpse (df_2016props) # looks better!
+```
+
+There are a few columns which have type IDs that are defined in the data dictionary on Kaggle. I'd like to replace the IDs in the current data frame with their values as defined in the data dictionary. Since some of these columns are factor type, I'll have to first convert them back to a character type, update the values, and then re-convert the columns back to factor type.
+
+```{r ID replacement}
+df_2016props <- df_2016props %>%
+  mutate (AC_type = as.character (AC_type),
+          architecture_type = as.character (architecture_type),
+          framing_type = as.character (framing_type),
+          heating_type = as.character (heating_type),
+          county_zoning = as.character (county_zoning),
+          story_type = as.character (story_type)
+          )
+
+# now that we have character types, replace the IDs with description strings
+df_2016props["AC_type"][df_2016props["AC_type"] == "1"] <- "Central"
+df_2016props["AC_type"][df_2016props["AC_type"] == "2"] <- "Chilled Water"
+df_2016props["AC_type"][df_2016props["AC_type"] == "3"] <- "Evaporative Cooler"
+df_2016props["AC_type"][df_2016props["AC_type"] == "4"] <- "Geothermal"
+df_2016props["AC_type"][df_2016props["AC_type"] == "5"] <- "None"
+df_2016props["AC_type"][df_2016props["AC_type"] == "6"] <- "Other"
+df_2016props["AC_type"][df_2016props["AC_type"] == "7"] <- "Packaged AC Unit"
+df_2016props["AC_type"][df_2016props["AC_type"] == "8"] <- "Partial"
+df_2016props["AC_type"][df_2016props["AC_type"] == "9"] <- "Refrigeration"
+df_2016props["AC_type"][df_2016props["AC_type"] == "10"] <- "Ventilation"
+df_2016props["AC_type"][df_2016props["AC_type"] == "11"] <- "Wall Unit"
+df_2016props["AC_type"][df_2016props["AC_type"] == "12"] <- "Window Unit"
+df_2016props["AC_type"][df_2016props["AC_type"] == "13"] <- "Yes"
+
+df_2016props["architecture_type"][df_2016props["architecture_type"] == "1"] <- "A-Frame"
+df_2016props["architecture_type"][df_2016props["architecture_type"] == "2"] <- "Bungalow"
+df_2016props["architecture_type"][df_2016props["architecture_type"] == "3"] <- "Cape Cod"
+df_2016props["architecture_type"][df_2016props["architecture_type"] == "4"] <- "Cottage"
+df_2016props["architecture_type"][df_2016props["architecture_type"] == "5"] <- "Colonial"
+df_2016props["architecture_type"][df_2016props["architecture_type"] == "6"] <- "Custom"
+df_2016props["architecture_type"][df_2016props["architecture_type"] == "7"] <- "Contemporary"
+df_2016props["architecture_type"][df_2016props["architecture_type"] == "8"] <- "Conventional"
+df_2016props["architecture_type"][df_2016props["architecture_type"] == "9"] <- "Dome"
+df_2016props["architecture_type"][df_2016props["architecture_type"] == "10"] <- "French Provincial"
+df_2016props["architecture_type"][df_2016props["architecture_type"] == "11"] <- "Georgian"
+df_2016props["architecture_type"][df_2016props["architecture_type"] == "12"] <- "High Rise"
+df_2016props["architecture_type"][df_2016props["architecture_type"] == "13"] <- "Historical"
+df_2016props["architecture_type"][df_2016props["architecture_type"] == "14"] <- "Log Cabin / Rustic"
+df_2016props["architecture_type"][df_2016props["architecture_type"] == "15"] <- "Mediterranean"
+df_2016props["architecture_type"][df_2016props["architecture_type"] == "16"] <- "Modern"
+df_2016props["architecture_type"][df_2016props["architecture_type"] == "17"] <- "Mansion"
+df_2016props["architecture_type"][df_2016props["architecture_type"] == "18"] <- "English"
+df_2016props["architecture_type"][df_2016props["architecture_type"] == "19"] <- "Other"
+df_2016props["architecture_type"][df_2016props["architecture_type"] == "20"] <- "Prefab"
+df_2016props["architecture_type"][df_2016props["architecture_type"] == "21"] <- "Ranch / Rambler"
+df_2016props["architecture_type"][df_2016props["architecture_type"] == "22"] <- "Raised Ranch"
+df_2016props["architecture_type"][df_2016props["architecture_type"] == "23"] <- "Spanish"
+df_2016props["architecture_type"][df_2016props["architecture_type"] == "24"] <- "Traditional"
+df_2016props["architecture_type"][df_2016props["architecture_type"] == "25"] <- "Tudor"
+df_2016props["architecture_type"][df_2016props["architecture_type"] == "26"] <- "Unfinished"
+df_2016props["architecture_type"][df_2016props["architecture_type"] == "27"] <- "Victorian"
+
+df_2016props["framing_type"][df_2016props["framing_type"] == "1"] <- "Fireproofed structural steel"
+df_2016props["framing_type"][df_2016props["framing_type"] == "2"] <- "Fireproofed concrete"
+df_2016props["framing_type"][df_2016props["framing_type"] == "3"] <- "Non-combustible exterior"
+df_2016props["framing_type"][df_2016props["framing_type"] == "4"] <- "Wood / wood and steel"
+df_2016props["framing_type"][df_2016props["framing_type"] == "5"] <- "Specialized / Other"
+
+df_2016props["heating_type"][df_2016props["heating_type"] == "1"] <- "Baseboard"
+df_2016props["heating_type"][df_2016props["heating_type"] == "2"] <- "Central"
+df_2016props["heating_type"][df_2016props["heating_type"] == "3"] <- "Coal"
+df_2016props["heating_type"][df_2016props["heating_type"] == "4"] <- "Convection"
+df_2016props["heating_type"][df_2016props["heating_type"] == "5"] <- "Electric"
+df_2016props["heating_type"][df_2016props["heating_type"] == "6"] <- "Forced Air"
+df_2016props["heating_type"][df_2016props["heating_type"] == "7"] <- "Floor / Wall"
+df_2016props["heating_type"][df_2016props["heating_type"] == "8"] <- "Gas"
+df_2016props["heating_type"][df_2016props["heating_type"] == "9"] <- "Geothermal"
+df_2016props["heating_type"][df_2016props["heating_type"] == "10"] <- "Gravity"
+df_2016props["heating_type"][df_2016props["heating_type"] == "11"] <- "Heat Pump"
+df_2016props["heating_type"][df_2016props["heating_type"] == "12"] <- "Hot Water"
+df_2016props["heating_type"][df_2016props["heating_type"] == "13"] <- "None"
+df_2016props["heating_type"][df_2016props["heating_type"] == "14"] <- "Other"
+df_2016props["heating_type"][df_2016props["heating_type"] == "15"] <- "Oil"
+df_2016props["heating_type"][df_2016props["heating_type"] == "16"] <- "Partial"
+df_2016props["heating_type"][df_2016props["heating_type"] == "17"] <- "Propane"
+df_2016props["heating_type"][df_2016props["heating_type"] == "18"] <- "Radiant"
+df_2016props["heating_type"][df_2016props["heating_type"] == "19"] <- "Steam"
+df_2016props["heating_type"][df_2016props["heating_type"] == "20"] <- "Solar"
+df_2016props["heating_type"][df_2016props["heating_type"] == "21"] <- "Space / Suspended"
+df_2016props["heating_type"][df_2016props["heating_type"] == "22"] <- "Vent"
+df_2016props["heating_type"][df_2016props["heating_type"] == "23"] <- "Wood-Burning"
+df_2016props["heating_type"][df_2016props["heating_type"] == "24"] <- "Yes"
+df_2016props["heating_type"][df_2016props["heating_type"] == "25"] <- "Zone"
+
+# to be continued...
 ```
