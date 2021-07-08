@@ -63,7 +63,6 @@ df_2016props <- df_2016props %>%
           heatingorsystemtypeid = as.factor (heatingorsystemtypeid),
           pooltypeid10 = as.factor (pooltypeid10),
           pooltypeid7 = as.factor (pooltypeid7),
-          propertylandusetypeid = as.factor (propertylandusetypeid),
           storytypeid = as.factor (storytypeid),
           unitcnt = as.factor (unitcnt),
           numberofstories = as.factor (numberofstories),
@@ -72,7 +71,7 @@ df_2016props <- df_2016props %>%
 # drop unneeded columns
 df_2016props <- df_2016props %>% select (!c(
   parcelid, 
-  calculatedbathnbr, 
+  calculatedbathnbr,
   decktypeid,
   threequarterbathnbr, 
   finishedfloor1squarefeet, 
@@ -81,8 +80,10 @@ df_2016props <- df_2016props %>% select (!c(
   fips, 
   fullbathcnt, 
   garagetotalsqft, 
-  parcelid, poolsizesum, 
-  propertycountylandusecode, 
+  parcelid, 
+  poolsizesum, 
+  propertycountylandusecode,
+  propertylandusetypeid,
   propertyzoningdesc, 
   rawcensustractandblock, 
   censustractandblock, 
@@ -112,7 +113,6 @@ df_2016props <-
     spa_hottub = pooltypeid10,
     pool_with_spa = pooltypeid2,
     pool_no_spa = pooltypeid7,
-    county_zoning = propertylandusetypeid,
     city_id = regionidcity,
     county_id = regionidcounty,
     neighborhood_id = regionidneighborhood,
@@ -144,7 +144,6 @@ df_2016props <- df_2016props %>%
           architecture_type = as.character (architecture_type),
           framing_type = as.character (framing_type),
           heating_type = as.character (heating_type),
-          county_zoning = as.character (county_zoning),
           story_type = as.character (story_type)
           )
 
@@ -223,5 +222,75 @@ df_2016props["heating_type"][df_2016props["heating_type"] == "23"] <- "Wood-Burn
 df_2016props["heating_type"][df_2016props["heating_type"] == "24"] <- "Yes"
 df_2016props["heating_type"][df_2016props["heating_type"] == "25"] <- "Zone"
 
-# to be continued...
+df_2016props["story_type"][df_2016props["story_type"] == "1"] <- "Attic & Basement"
+df_2016props["story_type"][df_2016props["story_type"] == "2"] <- "Attic"
+df_2016props["story_type"][df_2016props["story_type"] == "3"] <- "Bi-Level with Attic & Basement"
+df_2016props["story_type"][df_2016props["story_type"] == "4"] <- "Bi-Level"
+df_2016props["story_type"][df_2016props["story_type"] == "5"] <- "Bi-Level with Attic"
+df_2016props["story_type"][df_2016props["story_type"] == "6"] <- "Bi-Level with Basement"
+df_2016props["story_type"][df_2016props["story_type"] == "7"] <- "Basement"
+df_2016props["story_type"][df_2016props["story_type"] == "8"] <- "Split Entry with Attic & Basement"
+df_2016props["story_type"][df_2016props["story_type"] == "9"] <- "Split Foyer with Attic & Basement"
+df_2016props["story_type"][df_2016props["story_type"] == "10"] <- "Level with Attic & Basement"
+df_2016props["story_type"][df_2016props["story_type"] == "11"] <- "Level with Attic"
+df_2016props["story_type"][df_2016props["story_type"] == "12"] <- "Level with Basement"
+df_2016props["story_type"][df_2016props["story_type"] == "13"] <- "Level"
+df_2016props["story_type"][df_2016props["story_type"] == "14"] <- "Multi-Level with Attic & Basement"
+df_2016props["story_type"][df_2016props["story_type"] == "15"] <- "Multi-Level"
+df_2016props["story_type"][df_2016props["story_type"] == "16"] <- "Multi-level with Attic"
+df_2016props["story_type"][df_2016props["story_type"] == "17"] <- "Multi-level with Basement"
+df_2016props["story_type"][df_2016props["story_type"] == "18"] <- "Split Level with Attic & Basement"
+df_2016props["story_type"][df_2016props["story_type"] == "19"] <- "Single Level with Attic & Basement"
+df_2016props["story_type"][df_2016props["story_type"] == "20"] <- "Split Entry with Attic"
+df_2016props["story_type"][df_2016props["story_type"] == "21"] <- "Split Entry with Basement"
+df_2016props["story_type"][df_2016props["story_type"] == "22"] <- "Split Foyer with Attic"
+df_2016props["story_type"][df_2016props["story_type"] == "23"] <- "Split Foyer with Basement"
+df_2016props["story_type"][df_2016props["story_type"] == "24"] <- "Single Level with Attic"
+df_2016props["story_type"][df_2016props["story_type"] == "25"] <- "Single Level with Basement"
+df_2016props["story_type"][df_2016props["story_type"] == "26"] <- "Single Level"
+df_2016props["story_type"][df_2016props["story_type"] == "28"] <- "Split Level with Basement"
+df_2016props["story_type"][df_2016props["story_type"] == "29"] <- "Split Entry"
+df_2016props["story_type"][df_2016props["story_type"] == "30"] <- "Split Foyer"
+df_2016props["story_type"][df_2016props["story_type"] == "31"] <- "Split Level"
+df_2016props["story_type"][df_2016props["story_type"] == "32"] <- "Tri-Level with Attic & Basement"
+df_2016props["story_type"][df_2016props["story_type"] == "33"] <- "Tri-Level with Attic"
+df_2016props["story_type"][df_2016props["story_type"] == "34"] <- "Tri-Level with Basement"
+df_2016props["story_type"][df_2016props["story_type"] == "35"] <- "Tri-Level"
+
+glimpse (df_2016props)
+
+# looks good - now to switch them back to factor type
+df_2016props <- df_2016props %>%
+  mutate (AC_type = as.factor (AC_type),
+          architecture_type = as.factor (architecture_type),
+          framing_type = as.factor (framing_type),
+          heating_type = as.factor (heating_type),
+          story_type = as.factor (story_type)
+          )
+```
+
+Now that the data is in a more readable format, I can start creating some more useful columns based off of descriptive statistics, and generate some preliminary visualizations to get a sense of the shape of the data and identify some interesting features to work with. From there, I can create more targeted data frames to export for further visualization in Tableau, for example, or create some regression models to try to predict other housing prices, etc. given this data set.
+
+First, some further grouping and data organization/descriptive statistics.
+```{r data organization}
+
+# creating a data frame with some descriptive stats per architecture type
+df_2016props_arch <- df_2016props %>% 
+  group_by (architecture_type) %>%
+  summarise (
+    count = n (),
+    max_tax = max (tax_total),
+    min_tax = min (tax_total),
+    mean_tax = mean (tax_total),
+    avg_year = mean (year_built) %>% round(),
+    avg_beds = mean (as.integer (bedrooms)) %>% round (digits = 1),
+    avg_baths = mean (as.integer (bathrooms)) %>% round (digits = 1)
+  )
+
+df_2016props_arch
+
+```
+
+Next, some simple visualization formulas for generating plots. 
+``` {r data visualization formulas}
 ```
